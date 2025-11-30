@@ -13,7 +13,7 @@ from pinecone import Pinecone
 from openai import OpenAI
 
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, SystemMessage
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableLambda
 
@@ -141,12 +141,38 @@ def _build_messages(inputs: dict) -> dict:
     pinecone_result = retrieve_pinecone_context(user_message)
     context = context_string_from_matches(pinecone_result.get("matches", []))
     
-    # Start from global memory
-    messages = list(memory)
+    messages = []
+
+    # System prompt – personality + strict tool usage rules
+    messages.append(
+        SystemMessage(
+            content=(
+                "You are a friendly, evidence-based personal trainer and RAG assistant. "
+                "Your goals are to: (1) give safe, practical fitness advice; "
+                "(2) tailor suggestions to the user's level and goals; "
+                "(3) clearly explain reasoning in simple language.\n\n"
+                "Always use the retrieved knowledge base context when it is relevant. "
+                "If the user asks for calculations, word counts, case conversion, or the current time, "
+                "you MUST call the appropriate tool (`calculator`, `word_count`, `convert_case`, "
+                "`get_current_time`) and base your answer directly on that tool's output instead of estimating. "
+                "If you use a tool, explicitly mention in your explanation that you used that tool."
+            )
+        )
+    )
+
+    # Then previous conversation
+    messages.extend(memory)
+    
+    # Current user message
     messages.append(HumanMessage(content=user_message))
     
+    # Optional RAG context message
     if context:
-        messages.append(HumanMessage(content=f"📚 Relevant context from knowledge base:\n{context}"))
+        messages.append(
+            HumanMessage(
+                content=f"📚 Relevant context from knowledge base:\n{context}"
+            )
+        )
     
     return {
         "messages": messages,
