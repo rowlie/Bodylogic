@@ -21,8 +21,8 @@ from langchain_core.runnables import (
 )
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-# ✅ Correct memory import
-from langchain.memory import ConversationBufferWindowMemory
+# ✅ Correct import for new LangChain versions
+from langchain.memory.buffer_window import ConversationBufferWindowMemory
 
 
 # ============================================================================
