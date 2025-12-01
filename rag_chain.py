@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""RAG Chain with Tools - Production-ready for Streamlit deployment (LCEL Refactored)"""
+"""RAG Chain with Tools - Production-ready for Streamlit deployment"""
 
 import os
 import json
@@ -11,7 +11,12 @@ from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
 
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, SystemMessage
+from langchain_core.messages import (
+    HumanMessage,
+    AIMessage,
+    ToolMessage,
+    SystemMessage,
+)
 from langchain_core.tools import tool
 from langchain_core.runnables import (
     RunnableLambda,
@@ -21,8 +26,8 @@ from langchain_core.runnables import (
 )
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-# ✅ Correct import for new LangChain versions
-from langchain.memory.buffer_window import ConversationBufferWindowMemory
+# ✅ NEW MEMORY SYSTEM (works for LangChain 0.1+)
+from langchain_community.chat_message_histories import ChatMessageHistory
 
 
 # ============================================================================
@@ -61,13 +66,12 @@ def _setup_env():
 # ============================================================================
 @st.cache_resource
 def get_retriever():
-    import torch  # necessary inside function for Streamlit stability
+    import torch  # prevents Streamlit CUDA crash
 
-    model = SentenceTransformer(
+    return SentenceTransformer(
         "sentence-transformers/all-mpnet-base-v2",
-        device="cpu"
+        device="cpu",
     )
-    return model
 
 
 # ============================================================================
@@ -81,13 +85,16 @@ def calculator(expression: str) -> str:
     except Exception as e:
         return f"Error: {str(e)}"
 
+
 @tool
 def get_current_time() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+
 @tool
 def word_count(text: str) -> str:
     return f"Word count: {len(text.split())}"
+
 
 @tool
 def convert_case(text: str, case_type: str) -> str:
@@ -96,7 +103,8 @@ def convert_case(text: str, case_type: str) -> str:
         "lower": text.lower(),
         "title": text.title(),
     }
-    return case_map.get(case_type, "Error: Unknown case type. Use upper/lower/title.")
+    return case_map.get(case_type, "Error: case_type must be upper / lower / title.")
+
 
 @tool
 def estimate_targets(weight_kg: float, sex: str, activity: str, goal: str) -> str:
@@ -105,22 +113,23 @@ def estimate_targets(weight_kg: float, sex: str, activity: str, goal: str) -> st
 
     if goal == "lose":
         target = maintenance - 400
-        g = "weight loss"
+        goal_name = "weight loss"
     elif goal == "gain":
         target = maintenance + 400
-        g = "muscle gain"
+        goal_name = "muscle gain"
     else:
         target = maintenance
-        g = "maintenance"
+        goal_name = "maintenance"
 
     protein_low = weight_kg * 1.6
     protein_high = weight_kg * 2.2
 
     return (
-        f"Daily targets for {g}:\n"
+        f"Daily targets for {goal_name}:\n"
         f"- Calories: {int(target)} kcal\n"
         f"- Protein: {protein_low:.1f}–{protein_high:.1f} g"
     )
+
 
 tools = [calculator, get_current_time, word_count, convert_case, estimate_targets]
 
@@ -133,31 +142,32 @@ def retrieve_pinecone_context(query: str, top_k: int = TOP_K) -> Dict:
         return {"matches": []}
 
     try:
-        xq = retriever.encode(query).tolist()
-        return index.query(vector=xq, top_k=top_k, include_metadata=True)
+        vector = retriever.encode(query).tolist()
+        return index.query(vector=vector, top_k=top_k, include_metadata=True)
     except Exception as e:
-        print(f"⚠️ Pinecone error: {e}")
+        print(f"⚠️ Pinecone retrieval error: {e}")
         return {"matches": []}
 
 
 def context_string_from_matches(matches: List) -> str:
-    parts = []
+    texts = []
     for m in matches:
         meta = m.get("metadata", {})
-        text = meta.get("text") or meta.get("passage_text") or ""
-        if text:
-            parts.append(text)
-    return "\n\n".join(parts)
+        passage = meta.get("text") or meta.get("passage_text") or ""
+        if passage:
+            texts.append(passage)
+    return "\n\n".join(texts)
 
 
 # ============================================================================
-# TOOL EXECUTION
+# TOOL EXECUTOR
 # ============================================================================
 def _tool_executor(call: dict) -> ToolMessage:
     name = call.get("name") or call.get("function", {}).get("name")
     raw_args = call.get("args") or call.get("function", {}).get("arguments", {})
     tool_id = call.get("id", "tool_call")
 
+    # Fix argument parsing
     if isinstance(raw_args, str):
         try:
             args = json.loads(raw_args)
@@ -166,13 +176,13 @@ def _tool_executor(call: dict) -> ToolMessage:
     else:
         args = raw_args or {}
 
-    match = [t for t in tools if t.name == name]
+    matches = [t for t in tools if t.name == name]
 
-    if not match:
+    if not matches:
         result = f"Tool '{name}' not found."
     else:
         try:
-            result = match[0].invoke(args)
+            result = matches[0].invoke(args)
         except Exception as e:
             result = f"Tool error: {e}"
 
@@ -186,55 +196,54 @@ def _build_full_prompt_messages(inputs: dict) -> dict:
     user_msg = inputs["user_message"]
     history = inputs.get("chat_history", [])
 
-    pinecone_res = retrieve_pinecone_context(user_msg)
-    context = context_string_from_matches(pinecone_res.get("matches", []))
+    pinecone = retrieve_pinecone_context(user_msg)
+    context = context_string_from_matches(pinecone.get("matches", []))
 
-    msgs = [
+    messages = [
         SystemMessage(
             content=(
-                "You are a friendly, evidence-based personal trainer and RAG assistant.\n"
-                "Always give safe, practical advice.\n\n"
-                "Tool rules:\n"
-                "- Use `calculator` for arithmetic.\n"
+                "You are BodyLogic: a friendly evidence-based personal trainer.\n"
+                "Follow all tool rules strictly:\n"
+                "- Use `calculator` for any arithmetic.\n"
                 "- Use `word_count` for word counting.\n"
-                "- Use `convert_case` for case changes.\n"
-                "- Use `get_current_time` for current date/time.\n"
-                "- Use ONLY `estimate_targets` for calorie/protein targets.\n"
+                "- Use `convert_case` for letter casing.\n"
+                "- Use `get_current_time` for the date/time.\n"
+                "- Use ONLY `estimate_targets` for calories/protein.\n"
             )
         )
     ]
 
-    msgs.extend(history)
-    msgs.append(HumanMessage(content=user_msg))
+    messages.extend(history)
+    messages.append(HumanMessage(content=user_msg))
 
     if context:
-        msgs.append(HumanMessage(content=f"📚 Context:\n{context}"))
+        messages.append(HumanMessage(content=f"📚 Relevant context:\n{context}"))
 
     return {
-        "messages": msgs,
+        "messages": messages,
         "rag_context": context,
         "original_user_message": user_msg,
     }
 
 
 # ============================================================================
-# MEMORY
+# MEMORY — NEW WAY
 # ============================================================================
 def _get_session_history(session_id: str):
+    """
+    We now use ChatMessageHistory (compatible with LangChain 0.1+).
+    RunnableWithMessageHistory will manage it automatically.
+    """
     key = f"{SESSION_ID_KEY}_{session_id}"
+
     if key not in st.session_state:
-        st.session_state[key] = ConversationBufferWindowMemory(
-            k=MEMORY_WINDOW_SIZE,
-            return_messages=True,
-            input_key="user_message",
-            output_key="final_response",
-            memory_key="chat_history",
-        )
+        st.session_state[key] = ChatMessageHistory()
+
     return st.session_state[key]
 
 
 # ============================================================================
-# INITIALIZATION
+# INITIALIZE CHAIN
 # ============================================================================
 def initialize_chain():
     global _initialized, retriever, pc, index, llm, llm_with_tools, rag_agent_chain_with_history
@@ -255,14 +264,14 @@ def initialize_chain():
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
     llm_with_tools = llm.bind_tools(tools)
 
-    # LCEL CHAIN
+    # LCEL graph
     prompt_builder = RunnableLambda(_build_full_prompt_messages)
-    messages_extractor = RunnablePassthrough.assign(messages=lambda x: x["messages"])
+    msg_extractor = RunnablePassthrough.assign(messages=lambda x: x["messages"])
 
     def _is_tool_call(msg: AIMessage) -> bool:
-        return msg.tool_calls is not None and len(msg.tool_calls) > 0
+        return msg.tool_calls and len(msg.tool_calls) > 0
 
-    tool_execution_loop = RunnableBranch(
+    tool_execution = RunnableBranch(
         (
             _is_tool_call,
             RunnableMap({
@@ -292,10 +301,10 @@ def initialize_chain():
     core_chain = (
         prompt_builder
         | RunnableMap({
-            "llm_response": messages_extractor | llm_with_tools,
+            "llm_response": msg_extractor | llm_with_tools,
             "messages": lambda x: x["messages"],
         })
-        | tool_execution_loop
+        | tool_execution
     )
 
     rag_agent_chain_with_history = RunnableWithMessageHistory(
@@ -316,7 +325,7 @@ def initialize_chain():
 # ============================================================================
 def chat_with_rag_and_tools(user_message: str) -> str:
     if not _initialized:
-        raise RuntimeError("Chain not initialized.")
+        raise RuntimeError("Chain not initialized. Call initialize_chain().")
 
     try:
         result = rag_agent_chain_with_history.invoke(
