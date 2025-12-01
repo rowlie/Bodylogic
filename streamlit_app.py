@@ -2,7 +2,7 @@ import streamlit as st
 import os
 from datetime import datetime
 
-# Import your chain logic
+# REMINDER: This is the ONLY place this import should appear.
 from rag_chain import initialize_chain, chat_with_rag_and_tools, SESSION_ID_KEY
 
 # Page config
