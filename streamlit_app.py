@@ -49,7 +49,7 @@ with st.sidebar:
         st.rerun()
 
     st.divider()
-    st.caption("Demo Prompts
+    st.caption(Demo Prompts
 
 PineCone Database
 
