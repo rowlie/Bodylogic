@@ -49,7 +49,31 @@ with st.sidebar:
         st.rerun()
 
     st.divider()
-    st.caption("Welcome to Body Logic - An Agentic RAG Agent with Tools and Memory • Powered by LangChain + Streamlit")
+    st.caption("Demo Prompts
+
+PineCone Database
+
+What is the most dangerous type of fat?
+
+What are the best exercises for your body type?
+
+What does alcohol do to your brain?
+
+
+Tools
+
+I am a 50 year old male 80kg what should be my calories targets?
+
+Conversational Memory
+
+I am a 75 kg male, office job, training 3 times per week. I want to lose a bit of fat but keep my strength. How would you structure my training and nutrition?”
+
+Calls the estimator tool 
+
+“Based on what I told you earlier about my weight, job, and training schedule, adjust your plan if I can only train twice per week now. Please remind me what targets you gave me before and how they change.”
+
+In the second reply, the agent correctly recalls that you are a 75 kg office worker and that the original plan assumed 3 sessions per week, then explicitly adjusts to “training twice per week” without you restating those details
+")
 
 # Main title
 st.title("🤖 Welocome to Body Logic ")
