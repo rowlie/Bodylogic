@@ -15,7 +15,9 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, System
 from langchain_core.runnables import RunnableLambda, RunnableBranch, RunnableMap, RunnablePassthrough
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.tools.structured import StructuredTool
-from langchain.memory import ConversationBufferWindowMemory
+
+# ✅ Correct import for latest LangChain
+from langchain.memory.buffer_window import ConversationBufferWindowMemory
 
 # ============================================================================
 # CONFIG
