@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""RAG Chain with Tools - Fully compatible with LangChain >=0.3.1"""
+"""RAG Chain with Tools - Streamlit-ready, LangChain >=0.3.1"""
 
 import os
 import json
@@ -16,17 +16,18 @@ from langchain_core.tools import tool
 from langchain_core.runnables import RunnableLambda, RunnableBranch, RunnableMap, RunnablePassthrough
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from langchain.memory import ConversationBufferMemory  # ✅ Updated memory
+# ✅ Correct memory import for LangChain >=0.3.1
+from langchain.memory.buffer import ConversationBufferMemory
 
 # =============================
-# Config
+# Configuration
 # =============================
 INDEX_NAME = "youtube-qa-index"
 TOP_K = 5
 SESSION_ID_KEY = "langchain_session"
 
 # =============================
-# Globals
+# Global state
 # =============================
 _initialized = False
 retriever = None
@@ -38,7 +39,7 @@ rag_agent_chain_with_history = None
 tools = []
 
 # =============================
-# Environment Setup
+# Environment setup
 # =============================
 def _setup_env():
     os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")
@@ -97,7 +98,7 @@ def estimate_targets(weight_kg: float, sex: str, activity: str, goal: str) -> st
 tools = [calculator, get_current_time, word_count, convert_case, estimate_targets]
 
 # =============================
-# Pinecone Retrieval
+# Pinecone retrieval
 # =============================
 def retrieve_pinecone_context(query: str, top_k: int = TOP_K) -> Dict:
     if retriever is None or index is None:
@@ -119,7 +120,7 @@ def context_string_from_matches(matches: List) -> str:
     return "\n\n".join(parts)
 
 # =============================
-# Tool Execution
+# Tool execution
 # =============================
 def _tool_executor(call: dict) -> ToolMessage:
     name = call.get("name") or call.get("function", {}).get("name")
@@ -143,7 +144,7 @@ def _tool_executor(call: dict) -> ToolMessage:
     return ToolMessage(content=str(result), tool_call_id=tool_id)
 
 # =============================
-# Prompt Builder
+# Prompt builder
 # =============================
 def _build_full_prompt_messages(inputs: dict) -> dict:
     user_msg = inputs["user_message"]
@@ -235,7 +236,7 @@ def initialize_chain():
     _initialized = True
 
 # =============================
-# Main Chat
+# Main chat
 # =============================
 def chat_with_rag_and_tools(user_message: str) -> str:
     if not _initialized:
