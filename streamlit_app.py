@@ -52,9 +52,9 @@ with st.sidebar:
     st.caption("Welcome to Body Logic - An Agentic RAG Agent with Tools and Memory • Powered by LangChain + Streamlit")
 
 # Main title
-st.title("🤖 Welcome to Body Logic - An Agentic RAG Agent with Tools and Memory")
+st.title("🤖 Welocome to Body Logic ")
 st.markdown(
-    "Ask questions about your Fitness Goals - I can use tools and retrieve relevant content from curated you tube videos."
+    "Ask questions about your Fitness Goals - I can use tools and retrieve relevant content from hand curated youtube videos."
 )
 
 # Initialize chain once
