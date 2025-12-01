@@ -49,12 +49,12 @@ with st.sidebar:
         st.rerun()
 
     st.divider()
-    st.caption("RAG Agent with Tool Use • Powered by LangChain + Streamlit")
+    st.caption("Welcome to Body Logic - An Agentic RAG Agent with Tools and Memory • Powered by LangChain + Streamlit")
 
 # Main title
-st.title("🤖 RAG Agent with Tools")
+st.title("🤖 Welcome to Body Logic - An Agentic RAG Agent with Tools and Memory")
 st.markdown(
-    "Ask questions about your knowledge base. I can use tools and retrieve relevant context."
+    "Ask questions about your Fitness Goals - I can use tools and retrieve relevant content from curated you tube videos."
 )
 
 # Initialize chain once
