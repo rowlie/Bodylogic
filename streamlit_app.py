@@ -65,7 +65,7 @@ with st.sidebar:
 1. I am a 75 kg male, office job, training 3 times per week. I want to lose a bit of fat but keep my strength. How would you structure my training and nutrition?
    - Calls the estimator tool.
 2. Based on what I told you earlier about my weight, job, and training schedule, adjust your plan if I can only train twice per week now. Please remind me what targets you gave me before and how they change.
-   -In the second reply, the agent correctly recalls that you are a 75 kg office worker and that the original plan assumed 3 sessions per week, then explicitly adjusts to “training twice per week” without you restating those details
+   - In the second reply, the agent correctly recalls that you are a 75 kg office worker and that the original plan assumed 3 sessions per week, then explicitly adjusts to “training twice per week” without you restating those details
 
     
     """
