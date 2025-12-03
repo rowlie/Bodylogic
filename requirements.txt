@@ -1,5 +1,7 @@
 streamlit
 openai
+langchain
 langchain-openai
+langchain-core
 pinecone-client
 sentence-transformers
