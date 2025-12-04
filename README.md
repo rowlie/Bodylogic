@@ -35,7 +35,7 @@ BodyLogic is a Streamlit app that delivers evidence-based fitness guidance using
 Set via Streamlit secrets
 
 
-## V2 Documentation for the V2 BodyLogic.py file
+# V2 Documentation for the V2 BodyLogic.py file
 
 This script is a Python CLI chatbot that combines LangChain agents, Pinecone-based RAG, and simple fitness tools to act as a personal-trainer-style assistant.​
 
