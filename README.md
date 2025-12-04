@@ -2,6 +2,8 @@
 
 BodyLogic is a Streamlit app that delivers evidence-based fitness guidance using a Retrieval-Augmented Generation (RAG) pipeline, tool-calling, and lightweight conversational memory. It indexes curated YouTube transcripts into Pinecone with all-mpnet-base-v2 embeddings, then answers user questions with OpenAI's GPT via LangChain Runnables. 
 
+The streamlit app uses - rag_chain.py, requirements.txt and streamlit_app.py
+
 ## Features
 
 - RAG on curated YouTube content using Pinecone (768-dim embeddings via all-mpnet-base-v2). 
