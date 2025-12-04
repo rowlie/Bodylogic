@@ -14,7 +14,8 @@ The streamlit app uses - rag_chain.py, requirements.txt and streamlit_app.py
 ## Architecture
 
 - **Ingestion**: YouTubeTranscriptApi → chunking (500 characters, 50 overlap) → HuggingFace embeddings → Pinecone upsert.
-- This is done with the videotranscripts.py file 
+- This is done with the videotranscripts.py file
+
 - **Serving chain** (LangChain RunnableSequence):
   - Retriever step: encodes user query and fetches top-k (5) matches from Pinecone. 
   - Prompt builder: system message + memory + optional knowledge base context message. 
@@ -112,16 +113,19 @@ Ensure your .env is correctly configured and the virtual environment is active.
 Run the script:
 
 bash
-python agentexecutor_rag_memory.py
+python V2 Bodylogic.py
 Use the CLI loop:
 
 Type fitness questions like “Can you design a 3-day beginner routine for the gym?” to get a plan using both training_plan and RAG when relevant.​
 
-Ask knowledge-base questions such as “What did the YouTube coach say about deload weeks?” to trigger rag_search over the Pinecone index.​
+Ask knowledge-base questions such as “What did the YouTube coach say about walking?” to trigger rag_search over the Pinecone index.​
 
 Ask “What’s the current time?” or “How many words are in: …” to exercise the utility tools.
 
 Type exit or quit to end the session.
+
+## Screenshots
+I have included some screenshots of the notebook and langsmith working
 
 
 
