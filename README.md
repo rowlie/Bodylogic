@@ -86,10 +86,10 @@ Embeddings: Uses the SentenceTransformer model flax-sentence-embeddings/all_data
 
 RAG: rag_search_func queries the Pinecone index, pulls text or passage_text from metadata, and returns concatenated context for the agent to use in responses.​
 
-## Agent: initialize_agent wires the tools, ChatOpenAI model, and ConversationBufferWindowMemory into a ZERO_SHOT_REACT_DESCRIPTION agent that selects tools based on their descriptions.​
+Agent: initialize_agent wires the tools, ChatOpenAI model, and ConversationBufferWindowMemory into a ZERO_SHOT_REACT_DESCRIPTION agent that selects tools based on their descriptions.​
 
 ## Tools exposed to the agent
-## rag_search: Looks up information in the YouTube QA knowledge base using Pinecone.​
+rag_search: Looks up information in the YouTube QA knowledge base using Pinecone.​
 
 get_current_time: Returns the current date and time string (input ignored).
 
