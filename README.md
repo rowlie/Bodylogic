@@ -11,7 +11,8 @@ BodyLogic is a Streamlit app that delivers evidence-based fitness guidance using
 
 ## Architecture
 
-- **Ingestion**: YouTubeTranscriptApi → chunking (500 characters, 50 overlap) → HuggingFace embeddings → Pinecone upsert. 
+- **Ingestion**: YouTubeTranscriptApi → chunking (500 characters, 50 overlap) → HuggingFace embeddings → Pinecone upsert.
+- This is done with the videotranscripts.py file 
 - **Serving chain** (LangChain RunnableSequence):
   - Retriever step: encodes user query and fetches top-k (5) matches from Pinecone. 
   - Prompt builder: system message + memory + optional knowledge base context message. 
